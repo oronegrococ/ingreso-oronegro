@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oro Negro - Registro de Ingreso</title>
   
-  <!-- Librería CSS para selector internacional de banderas -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
   
   <style>
@@ -17,14 +16,9 @@
       --text: #ffffff;
       --text-dim: #b0bec5;
       --border: #333333;
-      --error: #ff5252;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -58,9 +52,7 @@
       margin-bottom: 20px;
     }
 
-    .form-group {
-      margin-bottom: 18px;
-    }
+    .form-group { margin-bottom: 18px; }
 
     label {
       display: block;
@@ -79,20 +71,12 @@
       color: #ffffff;
       font-size: 14px;
       outline: none;
-      transition: border-color 0.2s;
     }
 
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--accent);
-    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 
-    /* Ajustes para el selector de banderas intl-tel-input */
     .iti { width: 100%; }
-    .iti__country-list { 
-      background-color: #2a2a2a; 
-      color: #ffffff; 
-      border: 1px solid var(--border);
-    }
+    .iti__country-list { background-color: #2a2a2a; color: #ffffff; }
 
     .btn-submit {
       background: var(--accent);
@@ -105,18 +89,9 @@
       cursor: pointer;
       width: 100%;
       margin-top: 10px;
-      transition: background 0.2s;
     }
 
-    .btn-submit:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-submit:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
     .hidden { display: none; }
     
     #msgStatus {
@@ -155,7 +130,6 @@
       <input type="tel" id="telefono" required>
     </div>
 
-    <!-- NIVEL 1 -->
     <div class="form-group">
       <label for="sec1">Operación Principal *</label>
       <select id="sec1" required onchange="cambiarNivelOperacion()">
@@ -165,7 +139,6 @@
       </select>
     </div>
 
-    <!-- NIVEL 2A: CARGA -->
     <div class="form-group hidden" id="grupoCarga">
       <label for="sec2">Tipo de Carga *</label>
       <select id="sec2">
@@ -177,7 +150,6 @@
       </select>
     </div>
 
-    <!-- NIVEL 2B: DESCARGA -->
     <div class="form-group hidden" id="grupoDescarga">
       <label for="sec3">Tipo de Descarga *</label>
       <select id="sec3">
@@ -200,18 +172,12 @@
   <div id="msgStatus"></div>
 </div>
 
-<!-- JS intl-tel-input -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 
 <script>
-  // =========================================================================
-  // CONFIGURACIÓN DE CONEXIÓN Y SEGURIDAD
-  // Reemplazá WEB_APP_URL por la URL /exec de tu Google Apps Script
-  // =========================================================================
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec";
   const API_KEY_FORMULARIO = "OroNegro_Secure_Token_2026_x89!";
 
-  // Inicialización del selector telefónico con banderas
   const phoneInput = document.querySelector("#telefono");
   const iti = window.intlTelInput(phoneInput, {
     initialCountry: "ar",
@@ -220,7 +186,6 @@
     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
   });
 
-  // Manejo dinámico de desplegables Carga / Descarga
   function cambiarNivelOperacion() {
     const sec1 = document.getElementById('sec1').value;
     const grupoCarga = document.getElementById('grupoCarga');
@@ -248,8 +213,7 @@
     }
   }
 
-  // Envío seguro mediante fetch
-  async function guardarRegistro(e) {
+  function guardarRegistro(e) {
     e.preventDefault();
 
     if (!iti.isValidNumber()) {
@@ -264,43 +228,39 @@
     status.style.color = '#ffd54f';
     status.innerText = "Registrando ingreso...";
 
-    const payload = {
-      apiKey: API_KEY_FORMULARIO,
-      datos: {
-        empresa: document.getElementById('empresa').value.trim(),
-        chofer: document.getElementById('chofer').value.trim(),
-        patente: document.getElementById('patente').value.trim().toUpperCase(),
-        telefono: iti.getNumber(),
-        sec1: document.getElementById('sec1').value,
-        sec2: document.getElementById('sec2').value,
-        sec3: document.getElementById('sec3').value,
-        detalle: document.getElementById('detalle').value.trim()
-      }
-    };
+    // Empaquetado como x-www-form-urlencoded para garantizar compatibilidad con Apps Script
+    const formData = new URLSearchParams();
+    formData.append("apiKey", API_KEY_FORMULARIO);
+    formData.append("empresa", document.getElementById('empresa').value.trim());
+    formData.append("chofer", document.getElementById('chofer').value.trim());
+    formData.append("patente", document.getElementById('patente').value.trim().toUpperCase());
+    formData.append("telefono", iti.getNumber());
+    formData.append("sec1", document.getElementById('sec1').value);
+    formData.append("sec2", document.getElementById('sec2').value);
+    formData.append("sec3", document.getElementById('sec3').value);
+    formData.append("detalle", document.getElementById('detalle').value.trim());
 
-    try {
-      const response = await fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors", // Evita problemas de permisos CORS en navegadores móviles
-        headers: {
-          "Content-Type": "text/plain"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      // Al usar mode: 'no-cors', la petición se procesa en el servidor de forma transparente
+    fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: formData.toString()
+    })
+    .then(() => {
       status.style.color = '#00e676';
       status.innerText = "¡Registro completado con éxito!";
       document.getElementById('ingresoForm').reset();
       cambiarNivelOperacion();
-
-    } catch (error) {
+    })
+    .catch((error) => {
       status.style.color = '#ff5252';
       status.innerText = "Error al enviar los datos. Reintente.";
       console.error(error);
-    } finally {
+    })
+    .finally(() => {
       btn.disabled = false;
-    }
+    });
   }
 </script>
 
