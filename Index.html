@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oro Negro - Registro de Ingreso</title>
+  
+  <!-- Librería CSS para selector internacional de banderas -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css">
+  
+  <style>
+    :root {
+      --bg-dark: #121212;
+      --card-bg: #1e1e1e;
+      --accent: #00e676;
+      --accent-hover: #00c853;
+      --text: #ffffff;
+      --text-dim: #b0bec5;
+      --border: #333333;
+      --error: #ff5252;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text);
+      padding: 20px 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .form-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 25px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    h2 {
+      color: var(--accent);
+      margin-top: 0;
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 1px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      background: #2a2a2a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    /* Ajustes para el selector de banderas intl-tel-input */
+    .iti { width: 100%; }
+    .iti__country-list { 
+      background-color: #2a2a2a; 
+      color: #ffffff; 
+      border: 1px solid var(--border);
+    }
+
+    .btn-submit {
+      background: var(--accent);
+      color: #000000;
+      font-weight: bold;
+      border: none;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .hidden { display: none; }
+    
+    #msgStatus {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 14px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-card">
+  <h2>REGISTRO DE INGRESO • ORO NEGRO</h2>
+  
+  <form id="ingresoForm" onsubmit="guardarRegistro(event)">
+    
+    <div class="form-group">
+      <label for="empresa">Empresa / Transportista *</label>
+      <input type="text" id="empresa" required placeholder="Ej: Transportes RIPARI" maxlength="100">
+    </div>
+
+    <div class="form-group">
+      <label for="chofer">Nombre y Apellido del Chofer *</label>
+      <input type="text" id="chofer" required placeholder="Ej: Cristian Gómez" maxlength="100">
+    </div>
+
+    <div class="form-group">
+      <label for="patente">Patente (Chasis / Acoplado) *</label>
+      <input type="text" id="patente" required placeholder="Ej: AA123CD / AB456EF" style="text-transform:uppercase;" maxlength="30">
+    </div>
+
+    <div class="form-group">
+      <label for="telefono">Teléfono Celular / WhatsApp *</label>
+      <input type="tel" id="telefono" required>
+    </div>
+
+    <!-- NIVEL 1 -->
+    <div class="form-group">
+      <label for="sec1">Operación Principal *</label>
+      <select id="sec1" required onchange="cambiarNivelOperacion()">
+        <option value="">-- Seleccionar Operación --</option>
+        <option value="CARGA">🚚 CARGA</option>
+        <option value="DESCARGA">📦 DESCARGA</option>
+      </select>
+    </div>
+
+    <!-- NIVEL 2A: CARGA -->
+    <div class="form-group hidden" id="grupoCarga">
+      <label for="sec2">Tipo de Carga *</label>
+      <select id="sec2">
+        <option value="">-- Seleccionar Tipo de Carga --</option>
+        <option value="NACIONAL">Carga - Nacional</option>
+        <option value="MERCOSUR">Carga - Mercosur</option>
+        <option value="CONTENEDORES">Carga - Contenedores</option>
+        <option value="OTROS">Carga - Otros</option>
+      </select>
+    </div>
+
+    <!-- NIVEL 2B: DESCARGA -->
+    <div class="form-group hidden" id="grupoDescarga">
+      <label for="sec3">Tipo de Descarga *</label>
+      <select id="sec3">
+        <option value="">-- Seleccionar Tipo de Descarga --</option>
+        <option value="RESINAS">Descarga - Resinas</option>
+        <option value="MADERAS">Descarga - Maderas</option>
+        <option value="PRODUCTO TERMINADO">Descarga - Producto Terminado</option>
+        <option value="OTROS">Descarga - Otros</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="detalle">Observaciones / Remito / Orden</label>
+      <textarea id="detalle" rows="2" placeholder="Detalles adicionales..." maxlength="250"></textarea>
+    </div>
+
+    <button type="submit" id="btnGuardar" class="btn-submit">REGISTRAR INGRESO</button>
+  </form>
+
+  <div id="msgStatus"></div>
+</div>
+
+<!-- JS intl-tel-input -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
+
+<script>
+  // =========================================================================
+  // CONFIGURACIÓN DE CONEXIÓN Y SEGURIDAD
+  // Reemplazá WEB_APP_URL por la URL /exec de tu Google Apps Script
+  // =========================================================================
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec";
+  const API_KEY_FORMULARIO = "OroNegro_Secure_Token_2026_x89!";
+
+  // Inicialización del selector telefónico con banderas
+  const phoneInput = document.querySelector("#telefono");
+  const iti = window.intlTelInput(phoneInput, {
+    initialCountry: "ar",
+    preferredCountries: ["ar", "br", "uy", "py", "cl"],
+    separateDialCode: true,
+    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+  });
+
+  // Manejo dinámico de desplegables Carga / Descarga
+  function cambiarNivelOperacion() {
+    const sec1 = document.getElementById('sec1').value;
+    const grupoCarga = document.getElementById('grupoCarga');
+    const grupoDescarga = document.getElementById('grupoDescarga');
+    const sec2 = document.getElementById('sec2');
+    const sec3 = document.getElementById('sec3');
+
+    if (sec1 === 'CARGA') {
+      grupoCarga.classList.remove('hidden');
+      grupoDescarga.classList.add('hidden');
+      sec2.required = true;
+      sec3.required = false;
+      sec3.value = '';
+    } else if (sec1 === 'DESCARGA') {
+      grupoDescarga.classList.remove('hidden');
+      grupoCarga.classList.add('hidden');
+      sec3.required = true;
+      sec2.required = false;
+      sec2.value = '';
+    } else {
+      grupoCarga.classList.add('hidden');
+      grupoDescarga.classList.add('hidden');
+      sec2.required = false;
+      sec3.required = false;
+    }
+  }
+
+  // Envío seguro mediante fetch
+  async function guardarRegistro(e) {
+    e.preventDefault();
+
+    if (!iti.isValidNumber()) {
+      alert("Por favor ingrese un número de teléfono celular válido.");
+      return;
+    }
+
+    const btn = document.getElementById('btnGuardar');
+    const status = document.getElementById('msgStatus');
+    
+    btn.disabled = true;
+    status.style.color = '#ffd54f';
+    status.innerText = "Registrando ingreso...";
+
+    const payload = {
+      apiKey: API_KEY_FORMULARIO,
+      datos: {
+        empresa: document.getElementById('empresa').value.trim(),
+        chofer: document.getElementById('chofer').value.trim(),
+        patente: document.getElementById('patente').value.trim().toUpperCase(),
+        telefono: iti.getNumber(),
+        sec1: document.getElementById('sec1').value,
+        sec2: document.getElementById('sec2').value,
+        sec3: document.getElementById('sec3').value,
+        detalle: document.getElementById('detalle').value.trim()
+      }
+    };
+
+    try {
+      const response = await fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors", // Evita problemas de permisos CORS en navegadores móviles
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      // Al usar mode: 'no-cors', la petición se procesa en el servidor de forma transparente
+      status.style.color = '#00e676';
+      status.innerText = "¡Registro completado con éxito!";
+      document.getElementById('ingresoForm').reset();
+      cambiarNivelOperacion();
+
+    } catch (error) {
+      status.style.color = '#ff5252';
+      status.innerText = "Error al enviar los datos. Reintente.";
+      console.error(error);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
