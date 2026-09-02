@@ -108,21 +108,27 @@
 <div class="form-card">
   <h2>REGISTRO DE INGRESO • ORO NEGRO</h2>
   
-  <form id="ingresoForm" onsubmit="guardarRegistro(event)">
+  <!-- Formulario nativo con target a un iframe oculto -->
+  <iframe name="hiddenFrame" id="hiddenFrame" style="display:none;" onload="if(submitted) mostrarExito();"></iframe>
+  
+  <form id="ingresoForm" action="https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec" method="POST" target="hiddenFrame" onsubmit="prepararEnvio(event)">
     
+    <input type="hidden" name="apiKey" value="OroNegro_Secure_Token_2026_x89!">
+    <input type="hidden" id="telefonoHidden" name="telefono" value="">
+
     <div class="form-group">
       <label for="empresa">Empresa / Transportista *</label>
-      <input type="text" id="empresa" required placeholder="Ej: Transportes RIPARI" maxlength="100">
+      <input type="text" id="empresa" name="empresa" required placeholder="Ej: Transportes RIPARI" maxlength="100">
     </div>
 
     <div class="form-group">
       <label for="chofer">Nombre y Apellido del Chofer *</label>
-      <input type="text" id="chofer" required placeholder="Ej: Cristian Gómez" maxlength="100">
+      <input type="text" id="chofer" name="chofer" required placeholder="Ej: Cristian Gómez" maxlength="100">
     </div>
 
     <div class="form-group">
       <label for="patente">Patente (Chasis / Acoplado) *</label>
-      <input type="text" id="patente" required placeholder="Ej: AA123CD / AB456EF" style="text-transform:uppercase;" maxlength="30">
+      <input type="text" id="patente" name="patente" required placeholder="Ej: AA123CD / AB456EF" style="text-transform:uppercase;" maxlength="30">
     </div>
 
     <div class="form-group">
@@ -132,7 +138,7 @@
 
     <div class="form-group">
       <label for="sec1">Operación Principal *</label>
-      <select id="sec1" required onchange="cambiarNivelOperacion()">
+      <select id="sec1" name="sec1" required onchange="cambiarNivelOperacion()">
         <option value="">-- Seleccionar Operación --</option>
         <option value="CARGA">🚚 CARGA</option>
         <option value="DESCARGA">📦 DESCARGA</option>
@@ -141,7 +147,7 @@
 
     <div class="form-group hidden" id="grupoCarga">
       <label for="sec2">Tipo de Carga *</label>
-      <select id="sec2">
+      <select id="sec2" name="sec2">
         <option value="">-- Seleccionar Tipo de Carga --</option>
         <option value="NACIONAL">Carga - Nacional</option>
         <option value="MERCOSUR">Carga - Mercosur</option>
@@ -152,7 +158,7 @@
 
     <div class="form-group hidden" id="grupoDescarga">
       <label for="sec3">Tipo de Descarga *</label>
-      <select id="sec3">
+      <select id="sec3" name="sec3">
         <option value="">-- Seleccionar Tipo de Descarga --</option>
         <option value="RESINAS">Descarga - Resinas</option>
         <option value="MADERAS">Descarga - Maderas</option>
@@ -163,7 +169,7 @@
 
     <div class="form-group">
       <label for="detalle">Observaciones / Remito / Orden</label>
-      <textarea id="detalle" rows="2" placeholder="Detalles adicionales..." maxlength="250"></textarea>
+      <textarea id="detalle" name="detalle" rows="2" placeholder="Detalles adicionales..." maxlength="250"></textarea>
     </div>
 
     <button type="submit" id="btnGuardar" class="btn-submit">REGISTRAR INGRESO</button>
@@ -175,8 +181,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 
 <script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec";
-  const API_KEY_FORMULARIO = "OroNegro_Secure_Token_2026_x89!";
+  let submitted = false;
 
   const phoneInput = document.querySelector("#telefono");
   const iti = window.intlTelInput(phoneInput, {
@@ -213,13 +218,15 @@
     }
   }
 
-  function guardarRegistro(e) {
-    e.preventDefault();
-
+  function prepararEnvio(e) {
     if (!iti.isValidNumber()) {
+      e.preventDefault();
       alert("Por favor ingrese un número de teléfono celular válido.");
-      return;
+      return false;
     }
+
+    document.getElementById('telefonoHidden').value = iti.getNumber();
+    document.getElementById('patente').value = document.getElementById('patente').value.trim().toUpperCase();
 
     const btn = document.getElementById('btnGuardar');
     const status = document.getElementById('msgStatus');
@@ -227,40 +234,21 @@
     btn.disabled = true;
     status.style.color = '#ffd54f';
     status.innerText = "Registrando ingreso...";
+    
+    submitted = true;
+    return true;
+  }
 
-    // Empaquetado como x-www-form-urlencoded para garantizar compatibilidad con Apps Script
-    const formData = new URLSearchParams();
-    formData.append("apiKey", API_KEY_FORMULARIO);
-    formData.append("empresa", document.getElementById('empresa').value.trim());
-    formData.append("chofer", document.getElementById('chofer').value.trim());
-    formData.append("patente", document.getElementById('patente').value.trim().toUpperCase());
-    formData.append("telefono", iti.getNumber());
-    formData.append("sec1", document.getElementById('sec1').value);
-    formData.append("sec2", document.getElementById('sec2').value);
-    formData.append("sec3", document.getElementById('sec3').value);
-    formData.append("detalle", document.getElementById('detalle').value.trim());
-
-    fetch(WEB_APP_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: formData.toString()
-    })
-    .then(() => {
-      status.style.color = '#00e676';
-      status.innerText = "¡Registro completado con éxito!";
-      document.getElementById('ingresoForm').reset();
-      cambiarNivelOperacion();
-    })
-    .catch((error) => {
-      status.style.color = '#ff5252';
-      status.innerText = "Error al enviar los datos. Reintente.";
-      console.error(error);
-    })
-    .finally(() => {
-      btn.disabled = false;
-    });
+  function mostrarExito() {
+    const status = document.getElementById('msgStatus');
+    const btn = document.getElementById('btnGuardar');
+    
+    status.style.color = '#00e676';
+    status.innerText = "¡Registro completado con éxito!";
+    document.getElementById('ingresoForm').reset();
+    cambiarNivelOperacion();
+    btn.disabled = false;
+    submitted = false;
   }
 </script>
 
