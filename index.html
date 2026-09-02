@@ -12,7 +12,6 @@
       --bg-dark: #121212;
       --card-bg: #1e1e1e;
       --accent: #00e676;
-      --accent-hover: #00c853;
       --text: #ffffff;
       --text-dim: #b0bec5;
       --border: #333333;
@@ -91,16 +90,7 @@
       margin-top: 10px;
     }
 
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
     .hidden { display: none; }
-    
-    #msgStatus {
-      text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 14px;
-      min-height: 20px;
-    }
   </style>
 </head>
 <body>
@@ -108,10 +98,8 @@
 <div class="form-card">
   <h2>REGISTRO DE INGRESO • ORO NEGRO</h2>
   
-  <!-- Formulario nativo con target a un iframe oculto -->
-  <iframe name="hiddenFrame" id="hiddenFrame" style="display:none;" onload="if(submitted) mostrarExito();"></iframe>
-  
-  <form id="ingresoForm" action="https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec" method="POST" target="hiddenFrame" onsubmit="prepararEnvio(event)">
+  <!-- Formulario con envío directo a la Web App -->
+  <form id="ingresoForm" action="https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec" method="POST" onsubmit="prepararEnvio()">
     
     <input type="hidden" name="apiKey" value="OroNegro_Secure_Token_2026_x89!">
     <input type="hidden" id="telefonoHidden" name="telefono" value="">
@@ -172,17 +160,13 @@
       <textarea id="detalle" name="detalle" rows="2" placeholder="Detalles adicionales..." maxlength="250"></textarea>
     </div>
 
-    <button type="submit" id="btnGuardar" class="btn-submit">REGISTRAR INGRESO</button>
+    <button type="submit" class="btn-submit">REGISTRAR INGRESO</button>
   </form>
-
-  <div id="msgStatus"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 
 <script>
-  let submitted = false;
-
   const phoneInput = document.querySelector("#telefono");
   const iti = window.intlTelInput(phoneInput, {
     initialCountry: "ar",
@@ -218,37 +202,9 @@
     }
   }
 
-  function prepararEnvio(e) {
-    if (!iti.isValidNumber()) {
-      e.preventDefault();
-      alert("Por favor ingrese un número de teléfono celular válido.");
-      return false;
-    }
-
+  function prepararEnvio() {
     document.getElementById('telefonoHidden').value = iti.getNumber();
     document.getElementById('patente').value = document.getElementById('patente').value.trim().toUpperCase();
-
-    const btn = document.getElementById('btnGuardar');
-    const status = document.getElementById('msgStatus');
-    
-    btn.disabled = true;
-    status.style.color = '#ffd54f';
-    status.innerText = "Registrando ingreso...";
-    
-    submitted = true;
-    return true;
-  }
-
-  function mostrarExito() {
-    const status = document.getElementById('msgStatus');
-    const btn = document.getElementById('btnGuardar');
-    
-    status.style.color = '#00e676';
-    status.innerText = "¡Registro completado con éxito!";
-    document.getElementById('ingresoForm').reset();
-    cambiarNivelOperacion();
-    btn.disabled = false;
-    submitted = false;
   }
 </script>
 
