@@ -90,7 +90,16 @@
       margin-top: 10px;
     }
 
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
     .hidden { display: none; }
+    
+    #msgStatus {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 14px;
+      min-height: 20px;
+    }
   </style>
 </head>
 <body>
@@ -98,25 +107,21 @@
 <div class="form-card">
   <h2>REGISTRO DE INGRESO • ORO NEGRO</h2>
   
-  <!-- Formulario con envío directo a la Web App -->
-  <form id="ingresoForm" action="https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec" method="POST" onsubmit="prepararEnvio()">
+  <form id="ingresoForm" onsubmit="enviarSinRedireccion(event)">
     
-    <input type="hidden" name="apiKey" value="OroNegro_Secure_Token_2026_x89!">
-    <input type="hidden" id="telefonoHidden" name="telefono" value="">
-
     <div class="form-group">
       <label for="empresa">Empresa / Transportista *</label>
-      <input type="text" id="empresa" name="empresa" required placeholder="Ej: Transportes RIPARI" maxlength="100">
+      <input type="text" id="empresa" required placeholder="Ej: Transportes RIPARI" maxlength="100">
     </div>
 
     <div class="form-group">
       <label for="chofer">Nombre y Apellido del Chofer *</label>
-      <input type="text" id="chofer" name="chofer" required placeholder="Ej: Cristian Gómez" maxlength="100">
+      <input type="text" id="chofer" required placeholder="Ej: Cristian Gómez" maxlength="100">
     </div>
 
     <div class="form-group">
       <label for="patente">Patente (Chasis / Acoplado) *</label>
-      <input type="text" id="patente" name="patente" required placeholder="Ej: AA123CD / AB456EF" style="text-transform:uppercase;" maxlength="30">
+      <input type="text" id="patente" required placeholder="Ej: AA123CD / AB456EF" style="text-transform:uppercase;" maxlength="30">
     </div>
 
     <div class="form-group">
@@ -126,7 +131,7 @@
 
     <div class="form-group">
       <label for="sec1">Operación Principal *</label>
-      <select id="sec1" name="sec1" required onchange="cambiarNivelOperacion()">
+      <select id="sec1" required onchange="cambiarNivelOperacion()">
         <option value="">-- Seleccionar Operación --</option>
         <option value="CARGA">🚚 CARGA</option>
         <option value="DESCARGA">📦 DESCARGA</option>
@@ -135,7 +140,7 @@
 
     <div class="form-group hidden" id="grupoCarga">
       <label for="sec2">Tipo de Carga *</label>
-      <select id="sec2" name="sec2">
+      <select id="sec2">
         <option value="">-- Seleccionar Tipo de Carga --</option>
         <option value="NACIONAL">Carga - Nacional</option>
         <option value="MERCOSUR">Carga - Mercosur</option>
@@ -146,7 +151,7 @@
 
     <div class="form-group hidden" id="grupoDescarga">
       <label for="sec3">Tipo de Descarga *</label>
-      <select id="sec3" name="sec3">
+      <select id="sec3">
         <option value="">-- Seleccionar Tipo de Descarga --</option>
         <option value="RESINAS">Descarga - Resinas</option>
         <option value="MADERAS">Descarga - Maderas</option>
@@ -157,16 +162,21 @@
 
     <div class="form-group">
       <label for="detalle">Observaciones / Remito / Orden</label>
-      <textarea id="detalle" name="detalle" rows="2" placeholder="Detalles adicionales..." maxlength="250"></textarea>
+      <textarea id="detalle" rows="2" placeholder="Detalles adicionales..." maxlength="250"></textarea>
     </div>
 
-    <button type="submit" class="btn-submit">REGISTRAR INGRESO</button>
+    <button type="submit" id="btnGuardar" class="btn-submit">REGISTRAR INGRESO</button>
   </form>
+
+  <div id="msgStatus"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 
 <script>
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwaPzoNEZYryt_sYZj3YK2DpQ50Uwiz694BsOLjCJaFZT20nRhjbHVUzH_INqhwkE3UqA/exec";
+  const API_KEY_FORMULARIO = "OroNegro_Secure_Token_2026_x89!";
+
   const phoneInput = document.querySelector("#telefono");
   const iti = window.intlTelInput(phoneInput, {
     initialCountry: "ar",
@@ -202,9 +212,55 @@
     }
   }
 
-  function prepararEnvio() {
-    document.getElementById('telefonoHidden').value = iti.getNumber();
-    document.getElementById('patente').value = document.getElementById('patente').value.trim().toUpperCase();
+  function enviarSinRedireccion(e) {
+    e.preventDefault(); // Evita que la página salte a script.google.com
+
+    if (!iti.isValidNumber()) {
+      alert("Por favor ingrese un número de teléfono celular válido.");
+      return;
+    }
+
+    const btn = document.getElementById('btnGuardar');
+    const status = document.getElementById('msgStatus');
+    
+    btn.disabled = true;
+    status.style.color = '#ffd54f';
+    status.innerText = "Registrando ingreso...";
+
+    const params = new URLSearchParams();
+    params.append("apiKey", API_KEY_FORMULARIO);
+    params.append("empresa", document.getElementById('empresa').value.trim());
+    params.append("chofer", document.getElementById('chofer').value.trim());
+    params.append("patente", document.getElementById('patente').value.trim().toUpperCase());
+    params.append("telefono", iti.getNumber());
+    params.append("sec1", document.getElementById('sec1').value);
+    params.append("sec2", document.getElementById('sec2').value);
+    params.append("sec3", document.getElementById('sec3').value);
+    params.append("detalle", document.getElementById('detalle').value.trim());
+
+    // Envío asíncrono opaco
+    fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: params.toString()
+    })
+    .then(() => {
+      status.style.color = '#00e676';
+      status.innerText = "¡REGISTRO COMPLETADO CON ÉXITO!";
+      document.getElementById('ingresoForm').reset();
+      cambiarNivelOperacion();
+    })
+    .catch((err) => {
+      status.style.color = '#ff5252';
+      status.innerText = "Error de conexión. Intente nuevamente.";
+      console.error(err);
+    })
+    .finally(() => {
+      btn.disabled = false;
+    });
   }
 </script>
 
