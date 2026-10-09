@@ -107,13 +107,9 @@
 <div class="form-card">
   <h2>REGISTRO DE INGRESO • ORO NEGRO</h2>
   
-  <!-- Iframe oculto para evitar redirecciones -->
-  <iframe name="hiddenFrame" id="hiddenFrame" style="display:none;" onload="if(submitted) mostrarExito();"></iframe>
-  
-  <form id="ingresoForm" action="https://script.google.com/macros/s/AKfycbx-P0vCEdzjqcg-n5yxcxETkc0CzyactHOivGwDG94hBj8dmnSwUX9J8shGYDxUSC0YAw/exec" method="POST" target="hiddenFrame" onsubmit="prepararEnvio(event)">
+  <form id="ingresoForm" onsubmit="prepararEnvio(event)">
     
     <input type="hidden" name="apiKey" value="OroNegro_Secure_Token_2026_x89!">
-    <input type="hidden" id="telefonoHidden" name="telefono" value="">
 
     <div class="form-group">
       <label for="empresa">Empresa / Transportista *</label>
@@ -180,7 +176,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 
 <script>
-  let submitted = false;
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-P0vCEdzjqcg-n5yxcxETkc0CzyactHOivGwDG94hBj8dmnSwUX9J8shGYDxUSC0YAw/exec";
 
   const phoneInput = document.querySelector("#telefono");
   const iti = window.intlTelInput(phoneInput, {
@@ -218,14 +214,12 @@
   }
 
   function prepararEnvio(e) {
+    e.preventDefault();
+
     if (!iti.isValidNumber()) {
-      e.preventDefault();
       alert("Por favor ingrese un número de teléfono celular válido.");
       return false;
     }
-
-    document.getElementById('telefonoHidden').value = iti.getNumber();
-    document.getElementById('patente').value = document.getElementById('patente').value.trim().toUpperCase();
 
     const btn = document.getElementById('btnGuardar');
     const status = document.getElementById('msgStatus');
@@ -233,9 +227,34 @@
     btn.disabled = true;
     status.style.color = '#ffd54f';
     status.innerText = "Registrando ingreso...";
-    
-    submitted = true;
-    return true;
+
+    const formData = new URLSearchParams();
+    formData.append('apiKey', 'OroNegro_Secure_Token_2026_x89!');
+    formData.append('empresa', document.getElementById('empresa').value);
+    formData.append('chofer', document.getElementById('chofer').value);
+    formData.append('patente', document.getElementById('patente').value.trim().toUpperCase());
+    formData.append('telefono', iti.getNumber());
+    formData.append('sec1', document.getElementById('sec1').value);
+    formData.append('sec2', document.getElementById('sec2').value);
+    formData.append('sec3', document.getElementById('sec3').value);
+    formData.append('detalle', document.getElementById('detalle').value);
+
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData.toString()
+    })
+    .then(() => {
+      mostrarExito();
+    })
+    .catch(err => {
+      status.style.color = '#ff5252';
+      status.innerText = "Error de conexión. Intente nuevamente.";
+      btn.disabled = false;
+    });
   }
 
   function mostrarExito() {
@@ -247,7 +266,6 @@
     document.getElementById('ingresoForm').reset();
     cambiarNivelOperacion();
     btn.disabled = false;
-    submitted = false;
   }
 </script>
 
