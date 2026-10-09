@@ -228,24 +228,21 @@
     status.style.color = '#ffd54f';
     status.innerText = "Registrando ingreso...";
 
-    const formData = new URLSearchParams();
-    formData.append('apiKey', 'OroNegro_Secure_Token_2026_x89!');
-    formData.append('empresa', document.getElementById('empresa').value);
-    formData.append('chofer', document.getElementById('chofer').value);
-    formData.append('patente', document.getElementById('patente').value.trim().toUpperCase());
-    formData.append('telefono', iti.getNumber());
-    formData.append('sec1', document.getElementById('sec1').value);
-    formData.append('sec2', document.getElementById('sec2').value);
-    formData.append('sec3', document.getElementById('sec3').value);
-    formData.append('detalle', document.getElementById('detalle').value);
+    const payload = new FormData();
+    payload.append('apiKey', 'OroNegro_Secure_Token_2026_x89!');
+    payload.append('empresa', document.getElementById('empresa').value);
+    payload.append('chofer', document.getElementById('chofer').value);
+    payload.append('patente', document.getElementById('patente').value.trim().toUpperCase());
+    payload.append('telefono', iti.getNumber());
+    payload.append('sec1', document.getElementById('sec1').value);
+    payload.append('sec2', document.getElementById('sec2').value);
+    payload.append('sec3', document.getElementById('sec3').value);
+    payload.append('detalle', document.getElementById('detalle').value);
 
     fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData.toString()
+      body: payload
     })
     .then(() => {
       mostrarExito();
