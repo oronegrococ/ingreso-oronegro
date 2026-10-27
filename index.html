@@ -93,7 +93,6 @@
     .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
     .hidden { display: none !important; }
     
-    /* CAMPO HONEYPOT (INVENTADO PARA CAZAR BOTS) */
     .hp-field {
       opacity: 0;
       position: absolute;
@@ -112,7 +111,6 @@
       min-height: 20px;
     }
 
-    /* TARJETA DE CONFIRMACIÓN / COMPROBANTE DIGITAL */
     .ticket-card {
       background: #142a1e;
       border: 2px solid var(--accent);
@@ -162,10 +160,9 @@
   
   <form id="ingresoForm" onsubmit="prepararEnvio(event)">
     
-    <!-- Token de Sesión Inyectado por Apps Script (Reemplaza la API Key fija) -->
-    <input type="hidden" id="formToken" value="<?= formToken ?>">
+    <input type="hidden" name="apiKey" value="OroNegro_Secure_Token_2026_x89!">
 
-    <!-- HONEYPOT ANTI-BOT (Invisible para humanos) -->
+    <!-- Honeypot anti-bots -->
     <div class="hp-field">
       <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
     </div>
@@ -231,7 +228,6 @@
 
   <div id="msgStatus"></div>
 
-  <!-- COMPROBANTE DIGITAL MOSTRADO AL COMPLETAR -->
   <div id="ticketExito" class="ticket-card hidden">
     <h3>¡REGISTRO COMPLETADO!</h3>
     <p style="font-size:13px; color:#c8e6c9;">Su lugar en la fila ha sido reservado.</p>
@@ -288,7 +284,7 @@
     }
   }
 
-  async function prepararEnvio(e) {
+  function prepararEnvio(e) {
     e.preventDefault();
 
     if (!iti.isValidNumber()) {
@@ -303,14 +299,6 @@
     status.style.color = '#ffd54f';
     status.innerText = "Registrando ingreso, aguarde...";
 
-    // Obtener IP pública rápida para control de tasa
-    let userIp = '';
-    try {
-      const resIp = await fetch('https://api.ipify.org?format=json');
-      const dataIp = await resIp.json();
-      userIp = dataIp.ip || '';
-    } catch(errIp) { userIp = ''; }
-
     const empresa = document.getElementById('empresa').value.trim();
     const chofer = document.getElementById('chofer').value.trim();
     const patente = document.getElementById('patente').value.trim().toUpperCase();
@@ -320,9 +308,8 @@
     const opDetalle = (sec1 === 'CARGA') ? sec2 : sec3;
 
     const payload = new FormData();
-    payload.append('formToken', document.getElementById('formToken').value);
-    payload.append('website', document.getElementById('website').value); // Honeypot
-    payload.append('userIp', userIp);
+    payload.append('apiKey', 'OroNegro_Secure_Token_2026_x89!');
+    payload.append('website', document.getElementById('website').value);
     payload.append('empresa', empresa);
     payload.append('chofer', chofer);
     payload.append('patente', patente);
@@ -332,29 +319,26 @@
     payload.append('sec3', sec3);
     payload.append('detalle', document.getElementById('detalle').value.trim());
 
+    // Envío en mode no-cors para evitar bloqueos Cross-Origin desde GitHub Pages
     fetch(SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors',
       body: payload
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data && data.exito) {
-        mostrarExito({
-          empresa: empresa,
-          chofer: chofer,
-          patente: patente,
-          operacion: sec1 + ' - ' + opDetalle,
-          hora: data.horaIngreso || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
-      } else {
-        status.style.color = '#ff5252';
-        status.innerText = data ? data.mensaje : "Error procesando el registro.";
-        btn.disabled = false;
-      }
+    .then(() => {
+      const ahora = new Date();
+      const hs = String(ahora.getHours()).padStart(2, '0') + ':' + String(ahora.getMinutes()).padStart(2, '0');
+      mostrarExito({
+        empresa: empresa,
+        chofer: chofer,
+        patente: patente,
+        operacion: sec1 + ' - ' + opDetalle,
+        hora: hs
+      });
     })
     .catch(err => {
       status.style.color = '#ff5252';
-      status.innerText = "Error de conexión con el servidor. Intente nuevamente.";
+      status.innerText = "Error de conexión. Intente nuevamente.";
       btn.disabled = false;
     });
   }
